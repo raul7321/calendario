@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario con Eventos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .calendar-container {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h2 {
+            margin: 0;
+            color: #333333;
+            font-size: 1.4rem;
+            text-transform: capitalize;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        .calendar-table th {
+            color: #999999;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .calendar-table td {
+            padding: 10px 0;
+            font-size: 0.95rem;
+            color: #444444;
+            width: 14.28%;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        /* Días con fecha */
+        .calendar-table td.day-cell {
+            cursor: pointer;
+        }
+
+        .calendar-table td.day-cell:hover {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* Indicador visual para días que TIENEN un evento anotado */
+        .calendar-table td.has-event {
+            position: relative;
+            font-weight: 600;
+            color: #0f766e;
+        }
+        .calendar-table td.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #0f766e;
+            border-radius: 50%;
+        }
+
+        /* Estilo para el día actual */
+        .calendar-table td.today {
+            background-color: #3b82f6;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .calendar-table td.today:hover {
+            background-color: #2563eb;
+        }
+
+        /* Panel inferior donde se muestran los eventos */
+        .event-panel {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 350px;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .event-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: #666666;
+        }
+
+        .event-panel p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #111111;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h2 id="month-year-display"></h2>
+        </div>
+
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Lun</th>
+                    <th>Mar</th>
+                    <th>Mié</th>
+                    <th>Jue</th>
+                    <th>Vie</th>
+                    <th>Sáb</th>
+                    <th>Dom</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+        </table>
+    </div>
+
+    <div class="event-panel">
+        <h3 id="event-date-title">Selecciona un día</h3>
+        <p id="event-content">Haz clic para ver tus tareas o notas.</p>
+    </div>
+
+    <script>
+        // 1. TU LISTA DE EVENTOS ESPECIFICADA AQUÍ
+        // Usa el formato 'AÑO-MES-DÍA' (Asegúrate de poner dos dígitos para el mes y el día, ej: '05' o '09')
+        const listaEventos = {
+            '2026-06-01': '📅 Inicio de proyecto y revisión de objetivos mensuales.',
+            '2026-06-05': '🛒 Comprar materiales de oficina y renovación de licencias.',
+            '2026-06-15': '🚀 Entrega de prototipo final y junta con el equipo de desarrollo.',
+            '2026-06-18': '🦷 Cita médica con el dentista a las 16:00.\nOtro Evento',
+            '2026-06-26': '🎉 ¡Cena de fin de mes con el equipo!'
+        };
+
+        function generateCalendar() {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonth = today.getMonth(); 
+            const currentYear = today.getFullYear();
+
+            // Título superior
+            const options = { month: 'long', year: 'numeric' };
+            document.getElementById('month-year-display').textContent = today.toLocaleDateString('es-ES', options);
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = ''; 
+
+            let date = 1;
+
+            for (let i = 0; i < 6; i++) {
+                let row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                    let cell = document.createElement('td');
+
+                    if (i === 0 && j < startDay) {
+                        cell.textContent = '';
+                    } else if (date > totalDays) {
+                        cell.textContent = '';
+                    } else {
+                        cell.textContent = date;
+                        cell.classList.add('day-cell');
+
+                        // Generar la clave de fecha exacta en formato YYYY-MM-DD
+                        const stringMes = String(currentMonth + 1).padStart(2, '0');
+                        const stringDia = String(date).padStart(2, '0');
+                        const fechaClave = `${currentYear}-${stringMes}-${stringDia}`;
+
+                        // Guardamos la fecha del día en un atributo interno de la celda
+                        cell.dataset.fecha = fechaClave;
+                        cell.dataset.numDia = date;
+
+                        // Si hay un evento en la lista para esta fecha, añadimos la clase visual
+                        if (listaEventos[fechaClave]) {
+                            cell.classList.add('has-event');
+                        }
+
+                        // Resaltar día actual
+                        if (date === currentDay) {
+                            cell.classList.add('today');
+                        }
+
+                        // 2. ESCUCHAR EL CLICK EN EL DÍA
+                        cell.addEventListener('click', function() {
+                            mostrarEvento(this.dataset.fecha, this.dataset.numDia);
+                        });
+
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                calendarBody.appendChild(row);
+                if (date > totalDays) break;
+            }
+        }
+
+        // 3. FUNCIÓN PARA MOSTRAR EL TEXTO RELACIONADO
+        function mostrarEvento(fecha, numeroDia) {
+            const tituloPanel = document.getElementById('event-date-title');
+            const contenidoPanel = document.getElementById('event-content');
+
+            // Cambiar título del panel
+            tituloPanel.textContent = `Día ${numeroDia}`;
+
+            // Buscar si el día seleccionado tiene texto en nuestro objeto 'listaEventos'
+            if (listaEventos[fecha]) {
+                contenidoPanel.innerHTML = listaEventos[fecha];
+            } else {
+                contenidoPanel.innerHTML = '🟢 No tienes eventos programados para este día.';
+            }
+        }
+
+        // Inicializar
+        generateCalendar();
+    </script>
+</body>
+</html>
