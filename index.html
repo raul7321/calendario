@@ -155,11 +155,11 @@
         // 1. TU LISTA DE EVENTOS ESPECIFICADA AQUÍ
         // Usa el formato 'AÑO-MES-DÍA' (Asegúrate de poner dos dígitos para el mes y el día, ej: '05' o '09')
         const listaEventos = {
-            '2026-06-01': '📅 Inicio de proyecto y revisión de objetivos mensuales.',
-            '2026-06-05': '🛒 Comprar materiales de oficina y renovación de licencias.',
-            '2026-06-15': '🚀 Entrega de prototipo final y junta con el equipo de desarrollo.',
-            '2026-06-18': '🦷 Cita médica con el dentista a las 16:00.\nOtro Evento',
-            '2026-06-26': '🎉 ¡Cena de fin de mes con el equipo!'
+            '2026-06-01': 'Inicio de proyecto y revisión de objetivos mensuales.',
+            '2026-06-05': 'Comprar materiales de oficina y renovación de licencias.',
+            '2026-06-15': 'Entrega de prototipo final y junta con el equipo de desarrollo.',
+            '2026-06-18': 'Cita médica con el dentista a las 16:00.\nOtro Evento',
+            '2026-06-26': '¡Cena de fin de mes con el equipo!'
         };
 
         function generateCalendar() {
@@ -240,7 +240,7 @@
             if (listaEventos[fecha]) {
                 contenidoPanel.innerHTML = listaEventos[fecha];
             } else {
-                contenidoPanel.innerHTML = '🟢 No tienes eventos programados para este día.';
+                contenidoPanel.innerHTML = 'No tienes eventos programados para este día.';
             }
         }
 
