@@ -25,8 +25,11 @@
             margin-bottom: 20px;
         }
 
+        /* DISEÑO MEJORADO PARA LA CABECERA CON BOTONES */
         .calendar-header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
 
@@ -35,6 +38,23 @@
             color: #333333;
             font-size: 1.4rem;
             text-transform: capitalize;
+        }
+
+        .btn-nav {
+            background-color: #f3f4f6;
+            border: none;
+            color: #4b5563;
+            padding: 6px 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-nav:hover {
+            background-color: #e5e7eb;
+            color: #1f2937;
         }
 
         .calendar-table {
@@ -127,7 +147,9 @@
 
     <div class="calendar-container">
         <div class="calendar-header">
+            <button class="btn-nav" id="btn-prev">&lt;</button>
             <h2 id="month-year-display"></h2>
+            <button class="btn-nav" id="btn-next">&gt;</button>
         </div>
 
         <table class="calendar-table">
@@ -153,7 +175,6 @@
 
     <script>
         // 1. TU LISTA DE EVENTOS ESPECIFICADA AQUÍ
-        // Usa el formato 'AÑO-MES-DÍA' (Asegúrate de poner dos dígitos para el mes y el día, ej: '05' o '09')
         const listaEventos = {
             '2026-06-01': 'Inicio de proyecto y revisión de objetivos mensuales.',
             '2026-06-05': 'Comprar materiales de oficina y renovación de licencias.',
@@ -162,19 +183,20 @@
             '2026-06-26': '¡Cena de fin de mes con el equipo!'
         };
 
-        function generateCalendar() {
-            const today = new Date();
-            const currentDay = today.getDate();
-            const currentMonth = today.getMonth(); 
-            const currentYear = today.getFullYear();
+        // VARIABLES GLOBALES PARA CONTROLAR EL MES Y AÑO EN PANTALLA
+        const fechaReal = new Date(); // Para recordar qué día es hoy realmente
+        let mesActual = fechaReal.getMonth(); 
+        let anioActual = fechaReal.getFullYear();
 
-            // Título superior
+        function generateCalendar(month, year) {
+            // Título superior dinámico según el mes/año seleccionado
+            const fechaCalendario = new Date(year, month, 1);
             const options = { month: 'long', year: 'numeric' };
-            document.getElementById('month-year-display').textContent = today.toLocaleDateString('es-ES', options);
+            document.getElementById('month-year-display').textContent = fechaCalendario.toLocaleDateString('es-ES', options);
 
-            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const firstDayIndex = new Date(year, month, 1).getDay();
             const startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const totalDays = new Date(year, month + 1, 0).getDate();
 
             const calendarBody = document.getElementById('calendar-body');
             calendarBody.innerHTML = ''; 
@@ -196,11 +218,10 @@
                         cell.classList.add('day-cell');
 
                         // Generar la clave de fecha exacta en formato YYYY-MM-DD
-                        const stringMes = String(currentMonth + 1).padStart(2, '0');
+                        const stringMes = String(month + 1).padStart(2, '0');
                         const stringDia = String(date).padStart(2, '0');
-                        const fechaClave = `${currentYear}-${stringMes}-${stringDia}`;
+                        const fechaClave = `${year}-${stringMes}-${stringDia}`;
 
-                        // Guardamos la fecha del día en un atributo interno de la celda
                         cell.dataset.fecha = fechaClave;
                         cell.dataset.numDia = date;
 
@@ -209,12 +230,12 @@
                             cell.classList.add('has-event');
                         }
 
-                        // Resaltar día actual
-                        if (date === currentDay) {
+                        // Resaltar el día actual SOLO si estamos visualizando el mes y año correctos
+                        if (date === fechaReal.getDate() && month === fechaReal.getMonth() && year === fechaReal.getFullYear()) {
                             cell.classList.add('today');
                         }
 
-                        // 2. ESCUCHAR EL CLICK EN EL DÍA
+                        // Escuchar el click en el día
                         cell.addEventListener('click', function() {
                             mostrarEvento(this.dataset.fecha, this.dataset.numDia);
                         });
@@ -228,15 +249,13 @@
             }
         }
 
-        // 3. FUNCIÓN PARA MOSTRAR EL TEXTO RELACIONADO
+        // FUNCIÓN PARA MOSTRAR EL TEXTO RELACIONADO
         function mostrarEvento(fecha, numeroDia) {
             const tituloPanel = document.getElementById('event-date-title');
             const contenidoPanel = document.getElementById('event-content');
 
-            // Cambiar título del panel
             tituloPanel.textContent = `Día ${numeroDia}`;
 
-            // Buscar si el día seleccionado tiene texto en nuestro objeto 'listaEventos'
             if (listaEventos[fecha]) {
                 contenidoPanel.innerHTML = listaEventos[fecha];
             } else {
@@ -244,8 +263,27 @@
             }
         }
 
-        // Inicializar
-        generateCalendar();
+        // EVENTOS PARA LOS BOTONES DE NAVEGACIÓN
+        document.getElementById('btn-prev').addEventListener('click', () => {
+            mesActual--;
+            if (mesActual < 0) {
+                mesActual = 11;
+                anioActual--;
+            }
+            generateCalendar(mesActual, anioActual);
+        });
+
+        document.getElementById('btn-next').addEventListener('click', () => {
+            mesActual++;
+            if (mesActual > 11) {
+                mesActual = 0;
+                anioActual++;
+            }
+            generateCalendar(mesActual, anioActual);
+        });
+
+        // Inicializar el calendario con el mes y año actuales
+        generateCalendar(mesActual, anioActual);
     </script>
 </body>
 </html>
